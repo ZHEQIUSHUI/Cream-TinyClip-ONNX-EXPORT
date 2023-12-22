@@ -982,7 +982,12 @@ class CLIPBase(nn.Module):
 
     def encode_text(self, text, normalized=False):
         with self.text_autocast():
-            return self._text_encoder(text, normalized=normalized)
+                text_features = self._text_encoder(text, normalized=normalized)
+                text_features /= text_features.norm(dim=-1, keepdim=True)
+                return text_features
+    
+    def forward(self, image):
+        return self.encode_text(image)
 
     @property
     def logit_scale(self):
