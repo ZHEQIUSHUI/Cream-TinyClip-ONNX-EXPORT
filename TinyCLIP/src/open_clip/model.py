@@ -986,8 +986,14 @@ class CLIPBase(nn.Module):
                 text_features /= text_features.norm(dim=-1, keepdim=True)
                 return text_features
     
-    def forward(self, image):
-        return self.encode_text(image)
+    def forward(self, image, text):
+        if text is None:
+            return self.encode_image(image)
+        if image is None:
+            return self.encode_text(text)
+        image_features = self.encode_image(image)
+        text_features = self.encode_text(text)
+        return image_features, text_features
 
     @property
     def logit_scale(self):

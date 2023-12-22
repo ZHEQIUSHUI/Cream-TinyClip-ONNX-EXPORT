@@ -42,9 +42,30 @@ image_fname = './figure/TinyCLIP.jpg'
 image = preprocess(Image.open(image_fname)).unsqueeze(0)
 text = tokenizer(["a diagram", "a dog", "a cat"])
 
+decoder = ClipDecoder()
+
 with torch.no_grad(), torch.cuda.amp.autocast():
     image_features = model.encode_image(image)
     text_features = model.encode_text(text)
+
+    torch.onnx.export(model,(image,None),"vit8m.img.onnx",opset_version=14,input_names=["images"],output_names=["image_features"])
+    torch.onnx.export(model,(None,text),"vit8m.text.onnx",opset_version=14,input_names=["texts"],output_names=["text_features"],dynamic_axes={"texts":{0:"num_texts"}})
+
+    torch.onnx.export(decoder, (image_features, text_features),
+                      "feature_matmul_dynamic.onnx",
+                      input_names=("image_features", "text_features"),
+                      output_names=("logits_per_image", "logits_per_text"),
+                      dynamic_axes={
+                          "image_features": {
+                              0: "num_image",
+                              1: "len_image_feature"
+                          },
+                          "text_features": {
+                              0: "num_text",
+                              1: "len_text_feature"
+                          }
+                      })
+
     image_features /= image_features.norm(dim=-1, keepdim=True)
     # text_features /= text_features.norm(dim=-1, keepdim=True)
 
