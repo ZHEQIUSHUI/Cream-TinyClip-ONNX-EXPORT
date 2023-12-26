@@ -9,7 +9,7 @@ class ClipDecoder(nn.Module):
         super().__init__()
         # self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
 
-    def forward(self, image_features, text_features):
+    def forward(self, image_features: torch.Tensor, text_features: torch.Tensor):
         image_features = image_features / image_features.norm(dim=1, keepdim=True)
         logits_per_image = 100 * image_features @ text_features.t()
         logits_per_text = logits_per_image.t()
@@ -40,7 +40,7 @@ tokenizer = open_clip.get_tokenizer(arch)
 
 image_fname = './figure/TinyCLIP.jpg'
 image = preprocess(Image.open(image_fname)).unsqueeze(0)
-text = tokenizer(["a diagram", "a dog", "a cat"])
+text = tokenizer(["a diagram", "a dog", "a cat"]).type(torch.int32)
 
 decoder = ClipDecoder()
 

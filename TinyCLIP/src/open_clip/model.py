@@ -787,8 +787,10 @@ class TextEncoder(nn.Module):
 
         # if hidden_z is not None:
         #     x = torch.mul(x, hidden_z)
+        
+        text = text.to(torch.int32).argmax(dim=-1)
 
-        x = x[torch.arange(x.shape[0]), text.argmax(dim=-1)]
+        x = x[torch.arange(x.shape[0]), text]
 
         # x.shape = [batch_size, n_ctx, transformer.width]
         # take features from the eot embedding (eot_token is the highest number in each sequence)
